@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giám định bồi thường</title>
+    <style>
+        :root {
+            --primary: #009e28f5;
+            --primary-dark: #007100bb;
+            --secondary: #eef4fa;
+            --accent: #d9534f;
+            --border-color: #cbd5e1;
+            --text: #1e293b;
+            --bg: #f1f5f9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); color: var(--text); line-height: 1.45; overflow-x: hidden; }
+
+        /* HEADER */
+        header {
+            background: white;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 6px solid var(--primary);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        header h1 { font-size: 1.2rem; color: var(--primary); font-weight: 700; text-transform: uppercase; }
+        header p { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+
+        /* BỐ CỤC 2 CỘT CHIA ĐÔI MÀN HÌNH */
+        .workspace {
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            height: calc(100vh - 58px);
+        }
+
+        /* CỘT TRÁI: NHẬP LIỆU */
+        .left-panel {
+            background: #ffffff;
+            border-right: 1px solid var(--border-color);
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .grid-form { display: grid; grid-template-columns: 1fr; gap: 11px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
+        .form-group label span.req { color: var(--accent); }
+        .form-control {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,158,40,0.18); }
+        .form-control[readonly] { background-color: #f8fafc; color: #64748b; }
+
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 6px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.82rem;
+            color: #334155;
+        }
+        .checkbox-container input { width: 16px; height: 16px; margin-top: 2px; cursor: pointer; }
+
+        /* CỘT PHẢI: NÚT THAO TÁC & BẢN IN */
+        .right-panel {
+            background: #525659;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .action-toolbar {
+            width: 100%;
+            max-width: 1060px;
+            background: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .btn-group { display: flex; gap: 10px; }
+        .btn {
+            padding: 8px 18px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: white; border: 1px solid var(--border-color); color: #334155; }
+        .btn-outline:hover { background: #f8fafc; }
+
+        /* KHUNG VĂN BẢN TBGQ (KHỔ NGANG) */
+        .preview-wrapper { width: 100%; display: flex; justify-content: center; }
+        .preview-box {
+            background: #ffffff;
+            width: 1060px;
+            min-height: 720px;
+            padding: 38px 45px;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            line-height: 1.45;
+            box-sizing: border-box;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        .header-left img { width: 130px; height: auto; object-fit: contain; }
+
+        .title-section { text-align: center; margin-bottom: 18px; }
+        .title-section h2 { font-size: 1.35rem; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .title-section h3 { font-size: 1.05rem; font-weight: normal; font-style: italic; margin-bottom: 6px; }
+
+        .info-grid { margin-bottom: 12px; font-size: 1.02rem; }
+        .info-grid p { margin-bottom: 3px; }
+
+        /* BẢNG TBGQ */
+        .print-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 0.95rem;
+            margin: 12px 0;
+        }
+        .print-table th, .print-table td {
+            border: 1px solid #000;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+        .print-table th {
+            text-align: center;
+            background: #f4f4f4;
+            font-weight: bold;
+        }
+
+        /* THIẾT LẬP KHI IN KHỔ NGANG */
+        @page {
+            size: A4 landscape;
+            margin: 10mm 15mm;
+        }
+
+        @media print {
+            body { background: white !important; overflow: visible !important; }
+            header, .left-panel, .action-toolbar, .no-print { display: none !important; }
+            .workspace { display: block !important; height: auto !important; }
+            .right-panel {
+                background: white !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+            .preview-box {
+                box-shadow: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 10.5pt;
+            }
+            .print-table th {
+                background-color: #eee !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="no-print">
+    <div>
+        <h1>Hỗ trợ tính toán số tiền bồi thường</h1>
+        <p>Nhóm bồi thường con người - BIC Bắc Trung Bộ</p>
+    </div>
+    <div>
+        <button class="btn btn-outline" onclick="resetForm()">Đặt lại</button>
+    </div>
+</header>
+
+<div class="workspace">
+    <!-- CỘT TRÁI: KHỐI NHẬP LIỆU -->
+    <div class="left-panel no-print">
+        
+        <!-- 1. THÔNG TIN HỒ SƠ -->
+        <div class="card">
+            <div class="card-title">1. Thông tin chung hồ sơ</div>
+            <div class="grid-form">
+                <div class="form-group">
+                    <label>Số hồ sơ (Claim no):</label>
+                    <input type="text" id="claimNo" class="form-control" placeholder="Số hồ sơ" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Người mua bảo hiểm (Buyer):</label>
+                    <input type="text" id="buyerName" class="form-control" placeholder="Họ và tên người mua bảo hiểm" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Người được bảo hiểm (The Insured): <span class="req">*</span></label>
+                    <input type="text" id="insuredName" class="form-control" placeholder="Họ và tên người được bảo hiểm" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label>Người thụ hưởng (Beneficiary):</label>
+                    <input type="text" id="beneficiary" class="form-control" placeholder="Họ và tên người nhận tiền" oninput="calculate()">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Số tài khoản thụ hưởng:</label>
+                        <input type="text" id="accountNo" class="form-control" placeholder="Số tài khoản" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Ngân hàng thụ hưởng:</label>
+                        <input type="text" id="bankName" class="form-control" placeholder="Tên ngân hàng" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CHI TIẾT ĐIỀU TRỊ VÀ QUYỀN LỢI -->
+        <div class="card">
+            <div class="card-title">2. Tính toán bồi thường</div>
+            <div class="grid-form">
+                <div class="form-group">
+                    <label>Quyền lợi chính: <span class="req">*</span></label>
+                    <select id="benefitType" class="form-control" onchange="calculate()">
+                        <option value="thuong_tat" selected>02 - Chết, thương tật do tai nạn (Bảng 0756)</option>
+                        <option value="phau_thuat">03 - Trợ cấp phẫu thuật do ốm đau, bệnh tật (Bảng 0757)</option>
+                    </select>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Hạn mức quyền lợi (STBH): <span class="req">*</span></label>
+                        <input type="number" id="hanMuc" class="form-control" placeholder="Hạn mức quyền lợi" step="500000" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>% Tỷ lệ chi trả: <span class="req">*</span></label>
+                        <input type="number" id="tyLe" class="form-control" placeholder="Tỷ lệ chi trả" step="0.1" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Ngày điều trị từ: <span class="req">*</span></label>
+                        <input type="date" id="dateFrom" class="form-control" onchange="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày điều trị đến: <span class="req">*</span></label>
+                        <input type="date" id="dateTo" class="form-control" onchange="calculate()">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Số ngày tính tự động:</label>
+                        <input type="text" id="daysAuto" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày theo bảng kê chi tiết:</label>
+                        <input type="number" id="daysCustom" class="form-control" placeholder="Số ngày giường" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Trợ cấp nằm viện (đ/ngày):</label>
+                        <input type="number" id="troCapNgay" class="form-control" placeholder="Trợ cấp nằm viện" step="1000" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Mục theo Bảng tỷ lệ:</label>
+                        <input type="text" id="mucBangTyLe" class="form-control" placeholder="Mục bảng tỷ lệ" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mô tả bệnh án / Chẩn đoán:</label>
+                    <input type="text" id="moTaBenhAn" class="form-control" placeholder="Mô tả bệnh án / Chẩn đoán" oninput="calculate()">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="isTramYTe" onchange="calculate()">
+                        <span><strong>Hồ sơ trạm y tế</strong> (theo quy tắc trước 01/07/2025)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. QUY TẮC CHẾ TÀI -->
+        <div class="card">
+            <div class="card-title">3. Căn cứ giảm trừ</div>
+            <div class="grid-form">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Thời hạn quy định (ngày):</label>
+                        <input type="number" id="thoiHanTB" class="form-control" placeholder="Thời hạn (ngày)" oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label>Ngày thông báo SKBH:</label>
+                        <input type="date" id="ngayThongBao" class="form-control" onchange="calculate()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Quy tắc áp dụng mức chế tài:</label>
+                    <select id="loaiCheTai" class="form-control" onchange="calculate()">
+                        <option value="khong_fix">theo quy tắc mới (10%)</option>
+                        <option value="fix_5">theo quy tắc mới (5%)</option>
+                        <option value="thang_tiem_tien">theo quy tắc cũ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Hạn chót thông báo hợp lệ:</label>
+                    <input type="text" id="hanChotTB" class="form-control" readonly>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Số ngày thông báo muộn:</label>
+                        <input type="text" id="soNgayMuon" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Tỷ lệ giảm trừ (%):</label>
+                        <input type="text" id="tyLeCheTai" class="form-control" readonly style="font-weight: bold; color: var(--accent);">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CỘT PHẢI: NÚT THAO TÁC & BẢN IN NGANG -->
+    <div class="right-panel">
+        
+        <!-- NÚT THAO TÁC NẰM TRÊN -->
+        <div class="action-toolbar no-print">
+            <div>
+                <span style="font-weight: 700; color: #1e293b;">4. Bản Thông báo phương án giải quyết</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="copyDienGiai()">
+                    📋 Sao chép diễn giải
+                </button>
+                <button class="btn btn-primary" onclick="window.print()">
+                    🖨️ In / Xuất PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- KHUNG BẢN IN NGANG (TBGQ) -->
+        <div class="preview-wrapper">
+            <div class="preview-box" id="printArea">
+                <!-- Header văn bản -->
+                <div class="header-section">
+                    <div class="header-left">
+                        <img src="./img/BIC.png" alt="BIC Logo" onerror="this.style.display='none'">
+                    </div>
+                </div>
+
+                <!-- Tiêu đề -->
+                <div class="title-section">
+                    <h2>THÔNG BÁO PHƯƠNG ÁN GIẢI QUYẾT</h2>
+                    <h3>NOTICE OF SETTLEMENT</h3>
+                    <p style="font-size: 1rem; margin-top: 4px;"><strong>Số hồ sơ (Claim no):</strong> <span id="p_claimNo">CBC0426…</span></p>
+                </div>
+
+                <!-- Thông tin kính gửi -->
+                <div class="info-grid">
+                    <p><strong>Kính gửi (To):</strong> Người mua BH (Buyer): <span id="p_buyer">...</span></p>
+                    <p style="margin-left: 30px;">Người được BH (The Insured): <span id="p_insured" style="font-weight: bold;">...</span></p>
+                    <p style="margin-top: 10px;">
+                        BIC Bắc Trung Bộ xin trân trọng thông báo số tiền chi trả cho hồ sơ yêu cầu trả tiền bảo hiểm của Người được BH <span id="p_insured_body" style="font-weight: bold;">...</span> chi tiết như sau:
+                    </p>
+                    <p style="font-style: italic; font-size: 0.92rem; color: #333;">
+                        BIC Bac Trung Bo is pleased to notify the amount of insurance compensation to Mr/Mrs <span id="p_insured_en" style="font-weight: bold;">...</span> as follows:
+                    </p>
+                </div>
+
+                <!-- Bảng chi tiết in ngang -->
+                <table class="print-table">
+                    <thead>
+                        <tr>
+                            <th colspan="2" style="width: 18%;">Ngày Điều trị<br><span style="font-weight: normal; font-style: italic; font-size: 0.85rem;">(Date of treatment)</span></th>
+                            <th rowspan="2" style="width: 20%;">Q.L<br><span style="font-weight: normal; font-style: italic; font-size: 0.85rem;">(Benefit code)</span></th>
+                            <th rowspan="2" style="width: 13%;">Số tiền yêu cầu BT<br><span style="font-weight: normal; font-style: italic; font-size: 0.85rem;">(Claim Amount)</span></th>
+                            <th rowspan="2" style="width: 13%;">Số tiền thanh toán<br><span style="font-weight: normal; font-style: italic; font-size: 0.85rem;">(Payment Amount)</span></th>
+                            <th rowspan="2" style="width: 36%;">Diễn giải<br><span style="font-weight: normal; font-style: italic; font-size: 0.85rem;">(Note)</span></th>
+                        </tr>
+                        <tr>
+                            <th style="font-weight: normal; font-size: 0.82rem;">Từ ngày <i>(from)</i></th>
+                            <th style="font-weight: normal; font-size: 0.82rem;">Đến ngày <i>(to)</i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="printTableBody">
+                        <!-- Dữ liệu JS điền tự động -->
+                    </tbody>
+                </table>
+
+                <!-- Thông tin thanh toán -->
+                <div style="margin-top: 12px; font-size: 1rem;">
+                    <p>
+                        <strong>Tổng số tiền chi trả: <span id="p_totalText" style="font-weight: bold;">0 VNĐ</span></strong> (tỷ giá: 1.00) sẽ được thanh toán theo các thông tin sau:
+                    </p>
+                    <p style="font-style: italic; font-size: 0.92rem; color: #333; margin-bottom: 6px;">
+                        (The total payment amount of <span id="p_totalTextEn">0 VND</span> (Exchange rate: 1.00) will be transfered to):
+                    </p>
+                    <p style="margin-left: 25px;">- Người thụ hưởng (Beneficiary): <strong id="p_beneficiary">...</strong></p>
+                    <p style="margin-left: 25px;">- Số tài khoản (Account No): <strong id="p_account">...</strong></p>
+                    <p style="margin-left: 25px;">- Ngân hàng (Bank): <strong id="p_bank">...</strong></p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function fmtNum(n) {
+        if (isNaN(n) || n === null || n === undefined) return "0";
+        return Math.round(n).toLocaleString('vi-VN');
+    }
+
+    function calculate() {
+        const hanMuc = parseFloat(document.getElementById('hanMuc').value) || 0;
+        const tyLe = (parseFloat(document.getElementById('tyLe').value) || 0) / 100;
+        const dateFromStr = document.getElementById('dateFrom').value;
+        const dateToStr = document.getElementById('dateTo').value;
+        const daysCustom = parseInt(document.getElementById('daysCustom').value) || 0;
+        const troCapNgay = parseFloat(document.getElementById('troCapNgay').value) || 0;
+        const isTramYTe = document.getElementById('isTramYTe').checked;
+        const benefitType = document.getElementById('benefitType').value;
+        const mucBangTyLe = document.getElementById('mucBangTyLe').value.trim() || '…';
+        const moTa = document.getElementById('moTaBenhAn').value.trim() || (benefitType === 'thuong_tat' ? 'Điều trị thương tật' : 'Trợ cấp phẫu thuật thủ thuật');
+
+        let days = 0;
+        let dateFrom = dateFromStr ? new Date(dateFromStr) : null;
+        let dateTo = dateToStr ? new Date(dateToStr) : null;
+
+        if (dateFrom && dateTo && !isNaN(dateFrom) && !isNaN(dateTo)) {
+            const diffTime = dateTo - dateFrom;
+            days = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            if (days < 0) days = 0;
+        }
+        document.getElementById('daysAuto').value = days;
+        const effectiveDays = daysCustom > 0 ? daysCustom : days;
+
+        // Tính hạn chót thông báo & Chế tài
+        const thoiHanTB = parseInt(document.getElementById('thoiHanTB').value) || 0;
+        let hanChotDate = null;
+        if (dateTo && !isNaN(dateTo)) {
+            hanChotDate = new Date(dateTo);
+            hanChotDate.setDate(hanChotDate.getDate() + thoiHanTB);
+        } else if (dateFrom && !isNaN(dateFrom)) {
+            hanChotDate = new Date(dateFrom);
+            hanChotDate.setDate(hanChotDate.getDate() + thoiHanTB);
+        }
+
+        if (hanChotDate) {
+            document.getElementById('hanChotTB').value = hanChotDate.toISOString().split('T')[0];
+        } else {
+            document.getElementById('hanChotTB').value = "";
+        }
+
+        const ngayTBStr = document.getElementById('ngayThongBao').value;
+        let diffDaysCheTai = 0;
+        if (hanChotDate) {
+            let actualNotify = ngayTBStr ? new Date(ngayTBStr) : new Date();
+            diffDaysCheTai = Math.floor((actualNotify - hanChotDate) / (1000 * 60 * 60 * 24));
+        }
+        document.getElementById('soNgayMuon').value = diffDaysCheTai > 0 ? diffDaysCheTai : 0;
+
+        const loaiCheTai = document.getElementById('loaiCheTai').value;
+        let cheTaiRate = 0;
+        if (diffDaysCheTai > 0) {
+            if (loaiCheTai === 'khong_fix') {
+                cheTaiRate = 0.10;
+            } else if (loaiCheTai === 'fix_5') {
+                cheTaiRate = 0.05;
+            } else if (loaiCheTai === 'thang_tiem_tien') {
+                if (diffDaysCheTai <= 60) cheTaiRate = 0.05;
+                else if (diffDaysCheTai <= 120) cheTaiRate = 0.10;
+                else if (diffDaysCheTai <= 180) cheTaiRate = 0.15;
+                else if (diffDaysCheTai <= 240) cheTaiRate = 0.20;
+                else cheTaiRate = 0.25;
+            }
+        }
+        document.getElementById('tyLeCheTai').value = (cheTaiRate * 100).toFixed(0) + '%';
+
+        // Quyền lợi 1: Thương tật / Phẫu thuật
+        let stbtGoc1 = hanMuc * tyLe;
+        let note1 = "";
+
+        if (isTramYTe) {
+            let gocBanDau = stbtGoc1;
+            if (gocBanDau > 300000) stbtGoc1 = 300000;
+            let soSanhText = gocBanDau > 300000 ? "lớn hơn" : "nhỏ hơn";
+            let cheTaiText = cheTaiRate > 0 ? `. Giảm trừ ${(cheTaiRate*100).toFixed(0)}% số tiền chi trả do thông báo tổn thất muộn` : "";
+            note1 = `KH điều trị tại trạm y tế xã được thanh toán tối đa 300,000đ/ lần khám điều trị. So sánh STBT cho thương tật theo mục ${mucBangTyLe} bảng tỷ lệ thương tật số 0756: ${fmtNum(hanMuc)}đ * ${(tyLe*100).toFixed(0)}% = ${fmtNum(gocBanDau)}đ ${soSanhText} 300,000đ nên số tiền chi trả trong trường hợp này là ${fmtNum(stbtGoc1)}đ${cheTaiText}`;
+        } else {
+            let bangSo = benefitType === 'thuong_tat' ? 'bảng tỷ lệ thương tật số 0756' : 'bảng tỷ lệ phẫu thuật thủ thuật số 0757';
+            let cheTaiText = cheTaiRate > 0 ? `. Giảm trừ ${(cheTaiRate*100).toFixed(0)}% số tiền chi trả do thông báo tổn thất muộn` : "";
+            note1 = `${moTa}, áp dụng theo mục ${mucBangTyLe} ${bangSo}: ${fmtNum(hanMuc)}đ * ${(tyLe*100).toFixed(0)}%${cheTaiText}`;
+        }
+        let stbtNet1 = stbtGoc1 - (stbtGoc1 * cheTaiRate);
+
+        // Quyền lợi 2: Trợ cấp nằm viện
+        let stbtGoc2 = 0;
+        let note2 = "";
+        let stbtNet2 = 0;
+
+        if (isTramYTe) {
+            stbtGoc2 = 0;
+            stbtNet2 = 0;
+            note2 = "Trạm y tế không chi trả trợ cấp nằm viện";
+        } else {
+            stbtGoc2 = troCapNgay * effectiveDays;
+            stbtNet2 = stbtGoc2 - (stbtGoc2 * cheTaiRate);
+            let cheTaiText = cheTaiRate > 0 ? `. Giảm trừ ${(cheTaiRate*100).toFixed(0)}% số tiền chi trả do thông báo tổn thất muộn` : "";
+            note2 = `Trợ cấp nằm viện: ${fmtNum(troCapNgay)}đ * ${effectiveDays} ngày${cheTaiText}`;
+        }
+
+        const nameBenefit1 = benefitType === 'thuong_tat' ? "02 - Chết, thương tật do tai nạn" : "03 - Trợ cấp phẫu thuật do ốm đau, bệnh tật";
+        const tongGoc = stbtGoc1 + stbtGoc2;
+        const tongNet = stbtNet1 + stbtNet2;
+
+        // Cập nhật lên bản TBGQ
+        document.getElementById('p_claimNo').textContent = document.getElementById('claimNo').value || '...';
+        document.getElementById('p_buyer').textContent = document.getElementById('buyerName').value || '...';
+        document.getElementById('p_insured').textContent = document.getElementById('insuredName').value || '...';
+        document.getElementById('p_insured_body').textContent = document.getElementById('insuredName').value || '...';
+        document.getElementById('p_insured_en').textContent = document.getElementById('insuredName').value || '...';
+        document.getElementById('p_beneficiary').textContent = document.getElementById('beneficiary').value || '...';
+        document.getElementById('p_account').textContent = document.getElementById('accountNo').value || '...';
+        document.getElementById('p_bank').textContent = document.getElementById('bankName').value || '...';
+        document.getElementById('p_totalText').textContent = fmtNum(tongNet) + ' VNĐ';
+        document.getElementById('p_totalTextEn').textContent = fmtNum(tongNet) + ' VND';
+
+        // Render bảng in ngang
+        const tbody = document.getElementById('printTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td style="text-align: center;">${dateFromStr || ''}</td>
+                <td style="text-align: center;">${dateToStr || ''}</td>
+                <td><strong>${nameBenefit1}</strong></td>
+                <td style="text-align: right;">${fmtNum(stbtGoc1)}</td>
+                <td style="text-align: right; font-weight: bold;">${fmtNum(stbtNet1)}</td>
+                <td style="font-size: 0.9rem; line-height: 1.35;">${note1}</td>
+            </tr>
+            ${!isTramYTe && stbtGoc2 > 0 ? `
+            <tr>
+                <td style="text-align: center;">${dateFromStr || ''}</td>
+                <td style="text-align: center;">${dateToStr || ''}</td>
+                <td><strong>04 - Trợ cấp nằm viện</strong></td>
+                <td style="text-align: right;">${fmtNum(stbtGoc2)}</td>
+                <td style="text-align: right; font-weight: bold;">${fmtNum(stbtNet2)}</td>
+                <td style="font-size: 0.9rem; line-height: 1.35;">${note2}</td>
+            </tr>` : ''}
+            <tr style="font-weight: bold; background: #f8fafc;">
+                <td colspan="3" style="text-align: center; text-transform: uppercase;">Tổng cộng</td>
+                <td style="text-align: right;">${fmtNum(tongGoc)}</td>
+                <td style="text-align: right; color: #000; font-size: 1.05rem;">${fmtNum(tongNet)}</td>
+                <td></td>
+            </tr>
+        `;
+    }
+
+    function copyDienGiai() {
+        const text1 = document.getElementById('printTableBody').innerText;
+        navigator.clipboard.writeText(text1).then(() => {
+            alert('Đã sao chép nội dung bảng phương án giải quyết vào bộ nhớ tạm!');
+        });
+    }
+
+    function resetForm() {
+        if (confirm('Bạn có chắc muốn đặt lại toàn bộ biểu mẫu?')) {
+            location.reload();
+        }
+    }
+
+    window.onload = calculate;
+</script>
+
+</body>
+</html>
